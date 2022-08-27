@@ -5,6 +5,7 @@ from ..models import Post, Group
 
 User = get_user_model()
 
+
 class StaticURLTests(TestCase):
     @classmethod
     def setUpClass(cls):
@@ -12,15 +13,14 @@ class StaticURLTests(TestCase):
         cls.user = User.objects.create_user(username='auth')
         cls.author = User.objects.create_user(username='testuser')
         cls.post = Post.objects.create(
-            text = 'тестовый текст',
-            author = cls.user,
+            text='тестовый текст',
+            author=cls.user,
         )
         cls.group = Group.objects.create(
-            title  = 'title',
-            slug = 'slug',
-            description = 'descripton',
+            title='title',
+            slug='slug',
+            description='descripton',
         )
-
 
     def setUp(self):
         self.guest_client = Client()
@@ -42,38 +42,18 @@ class StaticURLTests(TestCase):
                 response = self.guest_client.get(url)
                 self.assertEqual(response.status_code, status)
 
-    #def test_main_page_url(self):
-        #"""Проверка главной страницы"""
-        #response = self.guest_client.get('/')
-        #self.assertEqual(response.status_code, 200)
-
-    #def test_group_slug_url(self):
-        #"""Проверка страницы группы"""
-        #response = self.guest_client.get('/group/slug/')
-        #self.assertEqual(response.status_code, 200)
-    
-    #def test_profile_url(self):
-        #"""Проверка профиля"""
-        #response = self.guest_client.get('/profile/auth/')
-        #self.assertEqual(response.status_code, 200)
-
-    #def test_posts_post_id_url(self):
-        #"""Проверка поста по аудишнику"""
-        #response = self.guest_client.get(f'/posts/{StaticURLTests.post.id}/')
-        #self.assertEqual(response.status_code, 200)
-
     def test_posts_post_id_edit_url(self):
         """Редактирование поста для автора"""
-        response = self.authorized_user.get(f'/posts/{StaticURLTests.post.id}/edit/')
-        self.assertRedirects(response,
-            (f'/posts/{StaticURLTests.post.id}/')
-         )
+        response = self.authorized_user.get(
+            f'/posts/{StaticURLTests.post.id}/edit/')
+        self.assertRedirects(response, (
+            f'/posts/{StaticURLTests.post.id}/'))
 
     def test_posts_create_url(self):
         """Проверка создания дла зарегистрированного пользователя"""
         response = self.auth_client.get('/create/')
         self.assertEqual(response.status_code, 200)
-    
+
     def test_posts_create_none_auth_url(self):
         """Проверка создания для незарегистрированного пользователя"""
         response = self.guest_client.get('/create/')
