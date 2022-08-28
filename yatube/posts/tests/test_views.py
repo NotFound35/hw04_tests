@@ -1,9 +1,9 @@
-from time import sleep
-from django.urls import reverse
-from django.test import TestCase, Client
-from ..models import Post, Group
-from django.contrib.auth import get_user_model
 from django import forms
+from django.contrib.auth import get_user_model
+from django.test import Client, TestCase
+from django.urls import reverse
+
+from ..models import Group, Post
 
 User = get_user_model()
 
@@ -37,6 +37,7 @@ class PostViewsTest(TestCase):
 
     def page_obj_in_context(self, response):
         """Универсальный модуль"""
+        self.assertIn('page_obj', response.context)
         first_obj = response.context.get('page_obj')[0]
         self.assertEqual(first_obj.author.username, 'auth')
         self.assertEqual(first_obj.text, 'testtext')
@@ -96,9 +97,22 @@ class PostViewsTest(TestCase):
         self.assertEqual(post_obj, self.post)
         self.assertEqual(post_count, expected_count)
 
+    def test_unauth_user_cant_post(self):
+        """Проверка неавторизованного пользователя"""
+        post_count = Post.objects.count()
+        response = self.guest_client.post(
+            reverse('posts:post_create'),
+            data={'text': 'testtext',
+                  'group': self.group1.id},
+            follow=True
+        )
+        self.assertRedirects(response, '/auth/login/?next=/create/')
+        self.assertEqual(Post.objects.count(), post_count)
+
     form_fields = {
         'group': forms.fields.ChoiceField,
-        'text': forms.fields.CharField
+        'text': forms.fields.CharField,
+        'image': forms.fields.ImageField
     }
 
     def test_edit_post_show_correct_context(self):
@@ -142,13 +156,14 @@ class PaginatorTest(TestCase):
             slug='slug',
             description='description'
         )
-        for i in range(15):
-            cls.post = Post.objects.create(
-                text=f'post {i}',
+        posts = [
+            Post(
+                text=f'text{i}',
                 author=cls.user,
                 group=cls.group
-            )
-            sleep(1E-6)
+            )for i in range(15)
+        ]
+        Post.objects.bulk_create(posts)
 
     def setUp(self):
         self.auth_client = Client()

@@ -1,9 +1,11 @@
-from unittest import TestCase
-from ..forms import PostForm
-from ..models import Post, Group
-from django.urls import reverse
-from django.test import TestCase, Client
+from http import HTTPStatus
+
 from django.contrib.auth import get_user_model
+from django.test import Client, TestCase
+from django.urls import reverse
+
+from ..forms import PostForm
+from ..models import Group, Post
 
 User = get_user_model()
 
@@ -40,7 +42,7 @@ class PostCreateFormTest(TestCase):
             follow=True
         )
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertRedirects(response, reverse('posts:profile',
                                                kwargs={'username': self.user}))
         self.assertEqual(Post.objects.count(), post_count + 1)
@@ -48,6 +50,7 @@ class PostCreateFormTest(TestCase):
             author=self.user,
             text=form_data['text'],
             id=2).exists())
+# если обращаюсь тут через self.post.id вылезает ошибка "False != True"
 
     def test_edit_post_form(self):
         post_count = Post.objects.count()
@@ -61,6 +64,7 @@ class PostCreateFormTest(TestCase):
             data=form_data,
             follow=True
         )
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(Post.objects.count(), post_count)
         self.assertEqual(self.post.text, form_data['text'])
+        self.assertEqual(self.group.id, form_data['group'])
