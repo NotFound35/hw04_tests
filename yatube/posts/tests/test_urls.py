@@ -54,7 +54,7 @@ class StaticURLTests(TestCase):
     def test_posts_create_url(self):
         """Проверка создания дла зарегистрированного пользователя"""
         response = self.auth_client.get('/create/')
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_posts_create_none_auth_url(self):
         """Проверка создания для незарегистрированного пользователя"""
@@ -64,7 +64,7 @@ class StaticURLTests(TestCase):
     def test_404_page(self):
         """Тест несуществующей страницы"""
         response = self.guest_client.get('404')
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_urls_uses_correct(self):
         """Проверка шаблонов"""

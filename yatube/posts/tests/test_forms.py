@@ -50,7 +50,6 @@ class PostCreateFormTest(TestCase):
             author=self.user,
             text=form_data['text'],
             id=2).exists())
-# если обращаюсь тут через self.post.id вылезает ошибка "False != True"
 
     def test_edit_post_form(self):
         post_count = Post.objects.count()

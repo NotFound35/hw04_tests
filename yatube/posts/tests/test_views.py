@@ -160,7 +160,7 @@ class PaginatorTest(TestCase):
                 text=f'text{i}',
                 author=cls.user,
                 group=cls.group
-            )for i in range(15)
+            ) for i in range(15)
         ]
         Post.objects.bulk_create(posts)
 
