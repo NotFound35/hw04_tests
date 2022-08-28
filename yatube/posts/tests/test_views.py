@@ -112,7 +112,6 @@ class PostViewsTest(TestCase):
     form_fields = {
         'group': forms.fields.ChoiceField,
         'text': forms.fields.CharField,
-        'image': forms.fields.ImageField
     }
 
     def test_edit_post_show_correct_context(self):
