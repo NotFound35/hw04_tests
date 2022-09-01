@@ -1,14 +1,16 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.cache import cache_page
 
-from .forms import PostForm
-from .models import Group, Post, User
+from .forms import CommentForm, PostForm
+from .models import Comment, Follow, Group, Post, User
 
 POST_COUNT = 10
 # Create your views here.
 
 
+@cache_page(20)
 def index(request):
     posts = Post.objects.select_related('author', 'group').all()
     paginator = Paginator(posts, POST_COUNT)
@@ -55,11 +57,17 @@ def post_detail(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     username = get_object_or_404(User, id=post.author_id)
     post_count = Post.objects.filter(author=username).count()
+    comments = Comment.objects.filter(post_id=post_id)
+    comments_count = Comment.objects.filter(post_id=post_id).count()
+    form = CommentForm(request.POST or None)
     context = {
         'post': post,
         'username': username,
         'post_count': post_count,
-        'author': username
+        'author': username,
+        'comments': comments,
+        'form': form,
+        'comments_count': comments_count
     }
     return render(request, template_name, context)
 
@@ -101,3 +109,36 @@ def post_edit(request, post_id):
         'is_edit': True
     }
     return render(request, 'posts/create_post.html', context)
+
+
+@login_required
+def add_comment(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    form = CommentForm(request.POST or None)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.author = request.user
+        comment.post = post
+        comment.save()
+    return redirect('posts:post_detail', post_id=post_id)
+
+
+@login_required
+def follow_index(request):
+    posts = Post.objects.filter(author__following__user=request.user)
+    page = Paginator(posts, POST_COUNT)
+    page_number = request.GET.get('page')
+    page_obj = page.get_page(page_number)
+    context = {
+        'page_obj': page_obj
+    }
+    return render(request, 'posts/follow.html', context)
+
+
+@login_required
+def profile_follow(request, username):
+    user = request.user
+    author = get_object_or_404(username=username)
+    if author != user:
+        Follow.objects.get(author=author, user=user)
+    return redirect('posts:profile', username=username)
